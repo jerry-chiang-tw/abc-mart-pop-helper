@@ -7,107 +7,79 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ui-bg:#f6f7f8;          /* 中性灰 UI 背景 */
-    --ui:#444;                /* 文字顏色 */
-    --muted:#999;             /* 次要文字 */
-    --line:#DADDE1;           /* 曲面邊線 */
-    --accent:#2b7cff;         /* 強調用色（按鈕） */
-    --ok:#1a7f37;
-    --warn:#b54708;
-    --zoom:.82;               /* 顯示縮放，匯出時會暫時改為 1 */
+    --ui-bg:#f6f7f8; --ui:#444; --muted:#999; --line:#DADDE1; --accent:#2b7cff; --warn:#b54708; --zoom:.82;
   }
-  html,body{height:100%;}
-  body{
-    margin:0; background:var(--ui-bg); color:var(--ui); font-family:"Noto Sans TC", system-ui, -apple-system, Segoe UI, Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
-    line-height:1.5;
-  }
-  .app{max-width:1080px; margin:20px auto; padding:12px;}
-  header{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:10px;}
-  h1{font-size:18px; margin:0; font-weight:700;}
-  .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+  html,body{height:100%}
+  body{margin:0; background:var(--ui-bg); color:var(--ui); font-family:"Noto Sans TC", system-ui, -apple-system, Segoe UI, Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif; line-height:1.5}
+  .app{max-width:1180px; margin:20px auto; padding:12px}
+  header{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:10px}
+  h1{font-size:18px; margin:0; font-weight:700}
+  .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
   .seg{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff}
   .seg button{padding:7px 10px; border:0; background:transparent; color:var(--ui); cursor:pointer; font-weight:600}
   .seg button[aria-pressed="true"]{background:var(--accent); color:#fff}
   .btn{appearance:none; border:1px solid var(--line); background:#fff; color:var(--ui); padding:7px 10px; border-radius:10px; font-weight:600; cursor:pointer}
   .btn.primary{background:var(--accent); color:#fff; border-color:transparent}
   .btn:disabled{opacity:.5; cursor:not-allowed}
-  .card{background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px;}
-  .toolbar{display:flex; gap:8px; align-items:center; justify-content:space-between; margin:8px 0 12px;}
+  .card{background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px}
+  .toolbar{display:flex; gap:8px; align-items:center; justify-content:space-between; margin:8px 0 12px}
   .note{color:var(--muted); font-size:12px}
   .paper-wrap{background:repeating-linear-gradient(45deg,#fafafa 0 12px,#f3f4f6 12px 24px); border:1px dashed var(--line); border-radius:12px; padding:10px}
   .zoom-box{transform:scale(var(--zoom)); transform-origin: top left; width:fit-content}
-  .paper{margin:0 auto; background:#fff; position:relative; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.06);}
-  /* A4 比例 210 x 297 mm；列印以 @page 控制。顯示縮小不影響匯出。 */
-  .paper.portrait{width:794px; height:1123px;}
-  .paper.landscape{width:1123px; height:794px;}
-  .half{position:absolute; inset:0;}
-  .portrait .half.top{height:50%; top:0;}
-  .portrait .half.bottom{height:50%; top:50%;}
-  .landscape .half.left{width:50%; left:0; height:100%;}
-  .landscape .half.right{width:50%; left:50%; height:100%;}
-
-  /* 可拖曳縮放的圖層容器（不再整塊點擊上傳，避免誤觸） */
-  .slot{position:absolute; inset:0; overflow:hidden; background:#f8fafc;}
+  .paper{margin:0 auto; background:#fff; position:relative; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  .paper.portrait{width:794px; height:1123px}
+  .paper.landscape{width:1123px; height:794px}
+  .half{position:absolute; inset:0}
+  .portrait .half.top{height:50%; top:0}
+  .portrait .half.bottom{height:50%; top:50%}
+  .landscape .half.left{width:50%; left:0; height:100%}
+  .landscape .half.right{width:50%; left:50%; height:100%}
+  .slot{position:absolute; inset:0; overflow:hidden; background:#f8fafc}
   .slot.drag-over{outline:2px dashed var(--accent); outline-offset:-6px}
-  .slot .img{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); transform-origin:center; pointer-events:none;}
-  .slot input[type=file]{position:absolute; inset:auto; width:1px; height:1px; opacity:0;}
-
-  /* 中心十字準心（作為明確上傳觸發器） */
-  .crosshair{position:absolute; top:50%; left:50%; width:60px; height:60px; margin:-30px 0 0 -30px; display:grid; place-items:center;}
+  .slot .img{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); transform-origin:center; pointer-events:none}
+  .slot input[type=file]{position:absolute; inset:auto; width:1px; height:1px; opacity:0}
+  .crosshair{position:absolute; top:50%; left:50%; width:60px; height:60px; margin:-30px 0 0 -30px; display:grid; place-items:center}
   .crosshair button{all:unset; display:grid; place-items:center; width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,.9); border:1px solid var(--line); cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.06)}
   .crosshair button:hover{transform:scale(1.06)}
-  .crosshair .plus{width:24px; height:24px; position:relative;}
-  .crosshair .plus::before, .crosshair .plus::after{content:""; position:absolute; background:#111;}
-  .crosshair .plus::before{width:2px; height:24px; left:50%; top:0; transform:translateX(-50%);} 
-  .crosshair .plus::after{height:2px; width:24px; top:50%; left:0; transform:translateY(-50%);} 
+  .crosshair .plus{width:24px; height:24px; position:relative}
+  .crosshair .plus::before, .crosshair .plus::after{content:""; position:absolute; background:#111}
+  .crosshair .plus::before{width:2px; height:24px; left:50%; top:0; transform:translateX(-50%)}
+  .crosshair .plus::after{height:2px; width:24px; top:50%; left:0; transform:translateY(-50%)}
   .tooltip{position:absolute; top:calc(50% + 40px); left:50%; transform:translateX(-50%); background:rgba(17,17,17,.82); color:#fff; padding:5px 8px; font-size:11px; border-radius:8px; pointer-events:none; opacity:0; transition:.2s}
   .slot:hover .tooltip{opacity:1}
-
-  /* 調整工具（每格） */
-  .slot-controls{position:absolute; left:8px; bottom:8px; display:flex; gap:8px; padding:6px; background:rgba(255,255,255,.85); border:1px solid var(--line); border-radius:10px; backdrop-filter: blur(4px);} 
+  .slot-controls{position:absolute; left:8px; bottom:8px; display:flex; gap:8px; padding:6px; background:rgba(255,255,255,.85); border:1px solid var(--line); border-radius:10px; backdrop-filter: blur(4px)}
   .slot-controls input[type=range]{width:140px}
-  .slot-controls .mini{display:inline-flex; align-items:center; gap:6px;}
+  .slot-controls .mini{display:inline-flex; align-items:center; gap:6px}
   .slot-controls label{font-size:12px; color:#333}
   .slot-controls .pick{font-size:12px; padding:4px 8px; border-radius:8px; border:1px solid var(--line); background:#fff; cursor:pointer}
-  /* 迷你段選（填滿 / 完整） */
-  .seg-mini{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-left:6px;}
+  .seg-mini{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-left:6px}
   .seg-mini button{border:0; background:#fff; padding:4px 8px; font-size:12px; cursor:pointer}
   .seg-mini button[aria-pressed="true"]{background:var(--accent); color:#fff}
-  .slot-controls .mini label{margin-right:4px;}
-
-  /* 分隔線：僅畫面顯示，列印隱藏 */
   .divider{position:absolute; background:#c9ced6; z-index:2; pointer-events:none}
-  .portrait .divider.h{left:0; right:0; height:1px; top:50%;}
-  .landscape .divider.v{top:0; bottom:0; width:1px; left:50%;}
+  .portrait .divider.h{left:0; right:0; height:1px; top:50%}
+  .landscape .divider.v{top:0; bottom:0; width:1px; left:50%}
+
+  /* 自由拼圖模式 */
+  .free-tools{display:flex; gap:8px; align-items:center; margin:8px 0 12px}
+  .free-note{font-size:12px; color:var(--muted)}
+  .free-paper{position:relative}
+  .free-item{position:absolute; box-shadow:0 1px 6px rgba(0,0,0,.12)}
+  .free-item img{display:block; width:100%; height:100%; object-fit:contain}
+  .item-bar{position:absolute; left:4px; top:4px; display:flex; gap:4px; background:rgba(255,255,255,.9); border:1px solid var(--line); padding:3px 4px; border-radius:8px}
+  .item-bar button{font-size:11px; padding:2px 6px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer}
+  .guideline{position:absolute; background:#5aa9ff; opacity:.8; pointer-events:none; z-index:5}
+  .guideline.h{height:1px; left:0; right:0}
+  .guideline.v{width:1px; top:0; bottom:0}
+
   @media print{
-    body{background:#fff}
-    header, .toolbar, .legal{display:none !important}
+    header, .toolbar, .legal, .free-tools{display:none !important}
     .paper-wrap{padding:0; border:0}
     .app{margin:0; padding:0}
     .paper{box-shadow:none; border:0}
-    .slot-controls, .crosshair, .tooltip, .divider{display:none !important}
+    .slot-controls, .crosshair, .tooltip, .divider, .item-bar, .guideline{display:none !important}
   }
-
-  /* 線上教學浮層 */
-  dialog{border:1px solid var(--line); border-radius:14px; padding:16px; width:min(520px,92vw);}
-  dialog::backdrop{background:rgba(0,0,0,.35)}
-  .list{padding-left:18px}
-
-  /* 法遵同意區 */
-  .legal{margin-top:12px; font-size:12px; color:#333;}
-  .legal small{display:block; color:#666}
-  .legal .warn{color:var(--warn); font-weight:700}
-
-  /* 列印樣式 */
-  @media print{
-    body{background:#fff}
-    header, .toolbar, .legal{display:none !important}
-    .paper-wrap{padding:0; border:0}
-    .app{margin:0; padding:0}
-    .paper{box-shadow:none; border:0}
-  }
-  @page { size: A4; margin: 0; }
-.exporting .slot-controls, .exporting .crosshair, .exporting .tooltip, .exporting .divider{display:none !important}
+  @page{ size:A4; margin:0 }
+  .exporting .slot-controls, .exporting .crosshair, .exporting .tooltip, .exporting .divider, .exporting .item-bar, .exporting .guideline{display:none !important}
 </style>
 </head>
 <body>
@@ -119,11 +91,16 @@
           <button id="btnPortrait" aria-pressed="true">直式 A4</button>
           <button id="btnLandscape" aria-pressed="false">橫式 A4</button>
         </div>
+        <div class="seg" role="group" aria-label="模式切換">
+          <button id="btnStandard" aria-pressed="true">店舖 POP 模式</button>
+          <button id="btnFree" aria-pressed="false">自由拼圖模式</button>
+        </div>
         <button class="btn" id="btnGuide">使用教學</button>
       </div>
     </header>
 
-    <div class="card">
+    <!-- 標準：A4 各半 -->
+    <section id="standardWrap" class="card">
       <div class="toolbar">
         <div class="note">上傳兩張圖片（A4 各半 = A5）。可拖曳移動、滾輪/滑桿縮放。中間線僅供對位，<b>不會列印</b>。</div>
         <div style="display:flex; gap:8px; align-items:center;">
@@ -132,12 +109,10 @@
           <button id="btnPdf" class="btn primary" disabled>下載 PDF</button>
         </div>
       </div>
-
       <div class="paper-wrap">
-        <div id="zoomBox" class="zoom-box">
+        <div class="zoom-box">
           <section id="paper" class="paper portrait" aria-label="A4 畫布">
             <div class="divider h"></div>
-            <!-- 直式：上下兩半；橫式：左右兩半（以 class 控制） -->
             <div class="half top">
               <div class="slot" data-idx="0">
                 <div class="crosshair"><button type="button" class="choose" aria-label="選擇圖片 1"><span class="plus"></span></button></div>
@@ -171,101 +146,116 @@
           </section>
         </div>
       </div>
-
       <div class="legal">
-        <label>
-          <input type="checkbox" id="agree" /> 我已閱讀並同意下列注意事項：
-        </label>
+        <label><input type="checkbox" id="agree" /> 我已閱讀並同意下列注意事項：</label>
         <small class="warn">為利店舖依陳列需求彈性調整，本拼圖工具僅提供排版便利。請務必確認所使用之內容是否合宜，並確保皆為公司提供或授權之行銷素材。請勿使用來源不明或未授權之網路素材；違反規範恐損害公司形象。</small>
       </div>
-    </div>
+    </section>
 
-    <p class="note">小提醒：此頁會記住您上次的方向與圖片調整（僅儲存在本機）。</p>
+    <!-- 自由拼圖模式 -->
+    <section id="freeWrap" class="card" style="display:none">
+      <div class="free-tools">
+        <div>
+          <button id="btnAddFree" class="btn">新增圖片</button>
+          <span class="free-note">支援 JPG / PNG / WEBP，建議 ≤ 4MB；可拖曳到畫布。</span>
+          <input id="freePicker" type="file" accept="image/*" style="display:none" multiple>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
+          <button id="btnClearFree" class="btn">清除所有</button>
+          <button id="btnPrint2" class="btn" disabled>列印（A4）</button>
+          <button id="btnPdf2" class="btn primary" disabled>下載 PDF</button>
+        </div>
+      </div>
+      <div class="paper-wrap">
+        <div class="zoom-box">
+          <section id="freePaper" class="paper portrait free-paper" aria-label="自由拼圖畫布">
+            <div class="guideline h" id="gH" style="top:50%"></div>
+            <div class="guideline v" id="gV" style="left:50%"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <p class="note">小提醒：此頁會記住您上次的方向與模式（僅儲存在本機）。</p>
   </div>
-
-  <dialog id="dlg">
-    <h3 style="margin:.25rem 0 .5rem 0; font-weight:700">快速使用教學</h3>
-    <ol class="list">
-      <li>選擇「直式 A4」或「橫式 A4」。</li>
-      <li>把圖片拖進每個區塊，或按中央 <b>＋</b>／「選擇圖片」。</li>
-      <li>用滑桿或滾輪調整縮放，直接拖曳圖片調整位置；勾選同意後，即可列印或下載 PDF。</li>
-    </ol>
-    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px">
-      <button class="btn" onclick="dlg.close()">我知道了</button>
-    </div>
-  </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 
   <script>
-  const paper = document.getElementById('paper');
-  const zoomBox = document.getElementById('zoomBox');
   const btnPortrait = document.getElementById('btnPortrait');
   const btnLandscape = document.getElementById('btnLandscape');
+  const btnStandard = document.getElementById('btnStandard');
+  const btnFree = document.getElementById('btnFree');
+  const standardWrap = document.getElementById('standardWrap');
+  const freeWrap = document.getElementById('freeWrap');
+  const paper = document.getElementById('paper');
+  const freePaper = document.getElementById('freePaper');
   const btnPrint = document.getElementById('btnPrint');
   const btnPdf = document.getElementById('btnPdf');
+  const btnPrint2 = document.getElementById('btnPrint2');
+  const btnPdf2 = document.getElementById('btnPdf2');
   const btnClear = document.getElementById('btnClear');
+  const btnClearFree = document.getElementById('btnClearFree');
   const agree = document.getElementById('agree');
-  const dlg = document.getElementById('dlg');
-  const btnGuide = document.getElementById('btnGuide');
+  const btnAddFree = document.getElementById('btnAddFree');
+  const freePicker = document.getElementById('freePicker');
 
   const slots = [...paper.querySelectorAll('.slot')];
-
-  // ---- LocalStorage keys ----
-  const LS = {
-    ORIENT: 'pop_a4_orient',
-    SLOT: (i)=>`pop_a4_slot_${i}` // 內含 {scale, x, y, imgData}
-  };
+  const LS = { ORIENT:'pop_a4_orient', MODE:'pop_mode', SLOT:(i)=>`pop_a4_slot_${i}` };
 
   function setOrientation(mode){
-    const isPortrait = mode === 'portrait';
-    paper.classList.toggle('portrait', isPortrait);
-    paper.classList.toggle('landscape', !isPortrait);
+    const isPortrait = mode==='portrait';
+    [paper, freePaper].forEach(p=>{ if(!p) return; p.classList.toggle('portrait', isPortrait); p.classList.toggle('landscape', !isPortrait); });
     btnPortrait.setAttribute('aria-pressed', isPortrait);
     btnLandscape.setAttribute('aria-pressed', !isPortrait);
-
-    // 分隔線切換方向
-    const hasH = paper.querySelector('.divider.h');
-    const hasV = paper.querySelector('.divider.v');
+    // 標準模式分隔線與 half
     if(isPortrait){
-      if(!hasH){ const d=document.createElement('div'); d.className='divider h'; paper.prepend(d); }
-      if(hasV) hasV.remove();
-      paper.querySelector('.half.top').className = 'half top';
-      paper.querySelector('.half.bottom').className = 'half bottom';
+      ensureDivider('h');
+      setHalves('portrait');
     }else{
-      if(!hasV){ const d=document.createElement('div'); d.className='divider v'; paper.prepend(d); }
-      const h = paper.querySelector('.divider.h'); if(h) h.remove();
-      paper.querySelector('.half.top').className = 'half left';
-      paper.querySelector('.half.bottom').className = 'half right';
+      ensureDivider('v');
+      setHalves('landscape');
     }
     localStorage.setItem(LS.ORIENT, mode);
   }
-
-  function enableExportIfAgreed(){
-    const ok = agree.checked;
-    btnPrint.disabled = !ok;
-    btnPdf.disabled = !ok;
+  function ensureDivider(type){
+    const h = paper.querySelector('.divider.h');
+    const v = paper.querySelector('.divider.v');
+    if(type==='h'){ if(!h){ const d=document.createElement('div'); d.className='divider h'; paper.prepend(d); } if(v) v.remove(); }
+    else { if(!v){ const d=document.createElement('div'); d.className='divider v'; paper.prepend(d); } if(h) h.remove(); }
+  }
+  function setHalves(kind){
+    if(kind==='portrait'){
+      paper.querySelector('.half.top').className='half top';
+      paper.querySelector('.half.bottom').className='half bottom';
+    }else{
+      paper.querySelector('.half.top').className='half left';
+      paper.querySelector('.half.bottom').className='half right';
+    }
   }
 
+  function setMode(which){
+    const isStd = which==='standard';
+    standardWrap.style.display = isStd? 'block':'none';
+    freeWrap.style.display = isStd? 'none':'block';
+    btnStandard.setAttribute('aria-pressed', isStd);
+    btnFree.setAttribute('aria-pressed', !isStd);
+    // 匯出按鈕可用性（自由模式不需勾選）
+    btnPrint.disabled = !agree.checked; btnPdf.disabled = !agree.checked;
+    btnPrint2.disabled = !isStd ? false : !agree.checked;
+    btnPdf2.disabled = !isStd ? false : !agree.checked;
+    localStorage.setItem(LS.MODE, which);
+  }
+
+  // 標準模式：每格控制
   function dataURLFromFile(file){
-    return new Promise((resolve)=>{
-      const r = new FileReader();
-      r.onload = () => resolve(r.result);
-      r.readAsDataURL(file);
-    })
+    return new Promise((resolve)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.readAsDataURL(file); })
   }
+  function saveSlot(i,payload){ const prev = JSON.parse(localStorage.getItem(LS.SLOT(i))||'{}'); localStorage.setItem(LS.SLOT(i), JSON.stringify({...prev,...payload})) }
+  function loadSlot(i){ try{ return JSON.parse(localStorage.getItem(LS.SLOT(i))||'{}') }catch(e){ return {} } }
 
-  function saveSlot(i, payload){
-    const prev = JSON.parse(localStorage.getItem(LS.SLOT(i))||'{}');
-    const now = {...prev, ...payload};
-    localStorage.setItem(LS.SLOT(i), JSON.stringify(now));
-  }
-  function loadSlot(i){
-    try{ return JSON.parse(localStorage.getItem(LS.SLOT(i))||'{}') }catch(e){ return {} }
-  }
-
-  // ---- Init slot behaviors ----
   slots.forEach((slot,i)=>{
     const img = slot.querySelector('.img');
     const file = slot.querySelector('.file');
@@ -277,149 +267,99 @@
     const modeCover = slot.querySelector('.mode-cover');
     const modeContain = slot.querySelector('.mode-contain');
 
-    // 拖放上傳（避免誤觸：不綁 slot click）
     slot.addEventListener('dragover', e=>{e.preventDefault(); slot.classList.add('drag-over')});
     slot.addEventListener('dragleave', ()=>slot.classList.remove('drag-over'));
-    slot.addEventListener('drop', async e=>{
-      e.preventDefault(); slot.classList.remove('drag-over');
-      const f = e.dataTransfer.files?.[0];
-      if(f && f.type.startsWith('image/')){ img.src = await dataURLFromFile(f); saveSlot(i,{imgData:img.src}); }
-    });
-    // 明確觸發：中央＋ 或 控制列的「選擇圖片」
-    const openPicker = ()=> file.click();
-    chooseBtn.addEventListener('click', openPicker);
-    pickBtn.addEventListener('click', openPicker);
+    slot.addEventListener('drop', async e=>{ e.preventDefault(); slot.classList.remove('drag-over'); const f=e.dataTransfer.files?.[0]; if(f&&f.type.startsWith('image/')){ img.src = await dataURLFromFile(f); saveSlot(i,{imgData:img.src}); }});
+    const openPicker=()=>file.click(); chooseBtn.addEventListener('click', openPicker); pickBtn.addEventListener('click', openPicker);
+    file.addEventListener('change', async ()=>{ if(file.files[0]){ img.src = await dataURLFromFile(file.files[0]); saveSlot(i,{imgData:img.src}); }});
 
-    file.addEventListener('change', async ()=>{
-      if(file.files[0]){ img.src = await dataURLFromFile(file.files[0]); saveSlot(i,{imgData:img.src}); }
-    });
-
-    // 拖曳移動（按住滑鼠拖動）
     let dragging=false, startX=0, startY=0, ox=0, oy=0;
-    slot.addEventListener('pointerdown', (e)=>{
-      // 僅在已載入圖片且不是點在按鈕上時可拖曳
-      if(!img.src) return;
-      if(e.target.closest('button')) return;
-      dragging=true; startX=e.clientX; startY=e.clientY; ox=+posx.value; oy=+posy.value; slot.setPointerCapture(e.pointerId);
-    });
-    slot.addEventListener('pointermove', (e)=>{
-      if(!dragging) return; const dx=e.clientX-startX, dy=e.clientY-startY; posx.value = ox+dx; posy.value = oy+dy; apply();
-    });
+    slot.addEventListener('pointerdown', (e)=>{ if(!img.src) return; if(e.target.closest('button')) return; dragging=true; startX=e.clientX; startY=e.clientY; ox=+posx.value; oy=+posy.value; slot.setPointerCapture(e.pointerId); });
+    slot.addEventListener('pointermove', (e)=>{ if(!dragging) return; const dx=e.clientX-startX, dy=e.clientY-startY; posx.value = ox+dx; posy.value = oy+dy; apply(); });
     slot.addEventListener('pointerup', ()=>{ if(!dragging) return; dragging=false; saveSlot(i,{x:+posx.value, y:+posy.value}); });
+    slot.addEventListener('wheel', (e)=>{ if(!img.src) return; e.preventDefault(); const v=Math.min(220, Math.max(50, (+scale.value + (e.deltaY<0?5:-5)))); scale.value=v; apply(); saveSlot(i,{scale:+scale.value}); }, {passive:false});
+    [scale,posx,posy].forEach(el=> el.addEventListener('input', apply));
+    [scale,posx,posy].forEach(el=> el.addEventListener('change', ()=>saveSlot(i,{scale:+scale.value,x:+posx.value,y:+posy.value})));
 
-    // 滾輪縮放
-    slot.addEventListener('wheel', (e)=>{
-      if(!img.src) return; e.preventDefault();
-      const v = Math.min(220, Math.max(50, (+scale.value + (e.deltaY<0? 5:-5))));
-      scale.value = v; apply(); saveSlot(i,{scale:+scale.value});
-    }, {passive:false});
-
-    // 滑桿事件
-    [scale,posx,posy].forEach(el=> el.addEventListener('input', ()=>{apply()}));
-    [scale,posx,posy].forEach(el=> el.addEventListener('change', ()=>{saveSlot(i,{scale:+scale.value,x:+posx.value,y:+posy.value})}));
-
-    function apply(){
-      const s = +scale.value/100; const x = +posx.value; const y = +posy.value;
-      img.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${s})`;
-    }
-    function fitContain(){
-      if(!img.naturalWidth||!img.naturalHeight) return;
-      const rect = slot.getBoundingClientRect();
-      const fit = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
-      scale.value = Math.round(fit*100);
-      posx.value = 0; posy.value = 0; apply();
-    }
-    function setMode(m){
-      const isContain = m==='contain';
-      modeCover.setAttribute('aria-pressed', (!isContain).toString());
-      modeContain.setAttribute('aria-pressed', (isContain).toString());
-      scale.disabled = isContain; posx.disabled = isContain; posy.disabled = isContain;
-      if(isContain) fitContain();
-      saveSlot(i,{mode:m, scale:+scale.value, x:+posx.value, y:+posy.value});
-    }
+    function apply(){ const s=+scale.value/100; const x=+posx.value; const y=+posy.value; img.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${s})`; }
+    function fitContain(){ if(!img.naturalWidth||!img.naturalHeight) return; const rect = slot.getBoundingClientRect(); const fit = Math.min(rect.width/img.naturalWidth, rect.height/img.naturalHeight); scale.value=Math.round(fit*100); posx.value=0; posy.value=0; apply(); }
+    function setMode(m){ const isContain=m==='contain'; modeCover.setAttribute('aria-pressed', (!isContain).toString()); modeContain.setAttribute('aria-pressed', isContain.toString()); scale.disabled=isContain; posx.disabled=isContain; posy.disabled=isContain; if(isContain) fitContain(); saveSlot(i,{mode:m, scale:+scale.value, x:+posx.value, y:+posy.value}); }
     modeCover.addEventListener('click', ()=> setMode('cover'));
-    modeContain.addEventListener('click', ()=> setMode('contain'));px), calc(-50% + ${y}px)) scale(${s})`;
-    }
+    modeContain.addEventListener('click', ()=> setMode('contain'));
 
-    // 載入快取
     const cached = loadSlot(i);
-    if(cached.scale!=null) scale.value = cached.scale;
-    if(cached.x!=null) posx.value = cached.x;
-    if(cached.y!=null) posy.value = cached.y;
-    if(cached.imgData){ img.src = cached.imgData; }
-    const initMode = cached.mode || 'cover';
-    setMode(initMode);
-    apply();
+    if(cached.scale!=null) scale.value=cached.scale; if(cached.x!=null) posx.value=cached.x; if(cached.y!=null) posy.value=cached.y; if(cached.imgData){ img.src=cached.imgData }
+    setMode(cached.mode||'cover'); apply();
   });
 
-  function enableExportIfAgreed(){
-    const ok = agree.checked;
-    btnPrint.disabled = !ok;
-    btnPdf.disabled = !ok;
-  }
-  agree.addEventListener('change', enableExportIfAgreed);
-  enableExportIfAgreed();
+  // 勾選合規
+  function enableExport(){ const ok = agree.checked; btnPrint.disabled=!ok; btnPdf.disabled=!ok; btnPrint2.disabled = false; btnPdf2.disabled = false; }
+  agree.addEventListener('change', enableExport); enableExport();
 
-  // ---- Orientation init ----
-  const cachedOrient = localStorage.getItem(LS.ORIENT) || 'portrait';
-  setOrientation(cachedOrient);
+  // Mode + Orientation init
+  const cachedOrient = localStorage.getItem(LS.ORIENT) || 'portrait'; setOrientation(cachedOrient);
   btnPortrait.addEventListener('click', ()=> setOrientation('portrait'));
   btnLandscape.addEventListener('click', ()=> setOrientation('landscape'));
+  const cachedMode = localStorage.getItem(LS.MODE) || 'standard'; setMode(cachedMode);
+  btnStandard.addEventListener('click', ()=> setMode('standard'));
+  btnFree.addEventListener('click', ()=> setMode('free'));
 
-  // ---- Print ----
-  btnPrint.addEventListener('click', ()=>{
-    window.print();
-  });
-
-  // ---- Export PDF （匯出前臨時關閉顯示縮放，確保高畫質） ----
-  async function renderCanvas(){
+  // 匯出（依目前模式選擇畫布）
+  async function renderCanvas(active){
     const prevZoom = getComputedStyle(document.documentElement).getPropertyValue('--zoom');
-    document.documentElement.style.setProperty('--zoom','1');
-    document.body.classList.add('exporting');
-    await new Promise(r=> setTimeout(r, 50));
-    const canvas = await html2canvas(paper, {backgroundColor:'#ffffff', scale:2, useCORS:true});
-    document.body.classList.remove('exporting');
-    document.documentElement.style.setProperty('--zoom', prevZoom.trim()||'.82');
-    return canvas;
+    document.documentElement.style.setProperty('--zoom','1'); document.body.classList.add('exporting'); await new Promise(r=>setTimeout(r,40));
+    const canvas = await html2canvas(active, {backgroundColor:'#ffffff', scale:2, useCORS:true});
+    document.body.classList.remove('exporting'); document.documentElement.style.setProperty('--zoom', prevZoom.trim()||'.82'); return canvas;
+  }
+  function doPrint(active){ window.print(); }
+  async function doPdf(active){ const mode = active.classList.contains('portrait')?'p':'l'; const canvas = await renderCanvas(active); const imgData = canvas.toDataURL('image/jpeg',0.95); const { jsPDF }=window.jspdf; const pdf=new jsPDF({orientation: mode==='p'?'portrait':'landscape', unit:'mm', format:'a4'}); const pageW=pdf.internal.pageSize.getWidth(); const pageH=pdf.internal.pageSize.getHeight(); const imgW=canvas.width, imgH=canvas.height; const ratio=Math.min(pageW/imgW,pageH/imgH); const w=imgW*ratio,h=imgH*ratio; const x=(pageW-w)/2, y=(pageH-h)/2; pdf.addImage(imgData,'JPEG',x,y,w,h); pdf.save('POP_helper_A4.pdf'); }
+
+  document.getElementById('btnPrint').addEventListener('click', ()=> doPrint(paper));
+  document.getElementById('btnPdf').addEventListener('click', ()=> doPdf(paper));
+  document.getElementById('btnPrint2').addEventListener('click', ()=> doPrint(freePaper));
+  document.getElementById('btnPdf2').addEventListener('click', ()=> doPdf(freePaper));
+
+  // 清除
+  btnClear.addEventListener('click', ()=>{ if(!confirm('確定要清除畫面上的圖片與位置調整嗎？')) return; slots.forEach((slot,i)=>{ const img=slot.querySelector('.img'); const scale=slot.querySelector('.scale'); const posx=slot.querySelector('.posx'); const posy=slot.querySelector('.posy'); img.removeAttribute('src'); scale.value=100; posx.value=0; posy.value=0; localStorage.removeItem(LS.SLOT(i)); img.style.transform='translate(-50%,-50%) scale(1)'; }); });
+  btnClearFree.addEventListener('click', ()=>{ if(!confirm('確定要清除自由拼圖的所有圖片？')) return; [...freePaper.querySelectorAll('.free-item')].forEach(n=>n.remove()); });
+
+  // 自由拼圖：新增圖片 & 拖曳/縮放/旋轉
+  btnAddFree.addEventListener('click', ()=> freePicker.click());
+  freePicker.addEventListener('change', async ()=>{ for(const f of freePicker.files){ if(!f.type.startsWith('image/')) continue; const url = await dataURLFromFile(f); addFreeItem(url); } freePicker.value=''; });
+  freePaper.addEventListener('dragover', e=>{e.preventDefault()});
+  freePaper.addEventListener('drop', async e=>{ e.preventDefault(); const f=e.dataTransfer.files?.[0]; if(f&&f.type.startsWith('image/')){ const url = await dataURLFromFile(f); addFreeItem(url, e.offsetX, e.offsetY); } });
+
+  function addFreeItem(src, x=100, y=100){
+    const box = document.createElement('div'); box.className='free-item'; box.style.width='260px'; box.style.height='180px'; box.style.transform=`translate(${x}px, ${y}px)`; box.dataset.x=x; box.dataset.y=y; box.dataset.angle='0';
+    const bar = document.createElement('div'); bar.className='item-bar';
+    bar.innerHTML = `<button class="r90">旋轉90°</button><button class="flip">水平翻轉</button><button class="front">置頂</button><button class="del">刪除</button>`;
+    const img = document.createElement('img'); img.src = src; box.appendChild(img); box.appendChild(bar); freePaper.appendChild(box);
+    bar.querySelector('.del').onclick = ()=> box.remove();
+    bar.querySelector('.front').onclick = ()=> box.style.zIndex = (''+ (Date.now()%1e9));
+    bar.querySelector('.r90').onclick = ()=> rotateBox(box, 90);
+    bar.querySelector('.flip').onclick = ()=> flipBox(box);
+    enableInteract(box);
+  }
+  function rotateBox(box, add){ const a = (parseFloat(box.dataset.angle)||0) + add; box.dataset.angle=a; updateTransform(box); }
+  function flipBox(box){ box.dataset.flip = box.dataset.flip==='1' ? '0':'1'; updateTransform(box); }
+  function updateTransform(box){ const x=+box.dataset.x||0, y=+box.dataset.y||0, a=+box.dataset.angle||0, flip=box.dataset.flip==='1'?-1:1; box.style.transform = `translate(${x}px, ${y}px) rotate(${a}deg) scale(${flip},1)`; }
+
+  function enableInteract(el){
+    interact(el).draggable({ listeners:{ move (event){ const x=(parseFloat(el.dataset.x)||0)+event.dx; const y=(parseFloat(el.dataset.y)||0)+event.dy; el.dataset.x=x; el.dataset.y=y; updateTransform(el); showGuides(el); } } })
+      .resizable({ edges:{left:true,right:true,bottom:true,top:true}, listeners:{ move (event){ let {x,y} = event.target.dataset; x=parseFloat(x)||0; y=parseFloat(y)||0; const w = Math.max(40, event.rect.width); const h = Math.max(40, event.rect.height); event.target.style.width = w+'px'; event.target.style.height = h+'px'; x += event.deltaRect.left; y += event.deltaRect.top; event.target.dataset.x = x; event.target.dataset.y = y; updateTransform(event.target); showGuides(event.target); } } })
+      .on('dragend', ()=>hideGuides())
+      .on('resizeend', ()=>hideGuides());
   }
 
-  btnPdf.addEventListener('click', async ()=>{
-    const mode = paper.classList.contains('portrait') ? 'p' : 'l';
-    const canvas = await renderCanvas();
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({orientation: mode==='p'?'portrait':'landscape', unit:'mm', format:'a4'});
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = canvas.width; const imgH = canvas.height; 
-    const ratio = Math.min(pageW/imgW, pageH/imgH);
-    const w = imgW*ratio, h = imgH*ratio; const x=(pageW-w)/2, y=(pageH-h)/2;
-    pdf.addImage(imgData, 'JPEG', x, y, w, h);
-    pdf.save('POP_helper_A4.pdf');
-  });
+  // 對齊輔助線（中心吸附）
+  const gH = document.getElementById('gH');
+  const gV = document.getElementById('gV');
+  function showGuides(el){ const r = el.getBoundingClientRect(); const p = freePaper.getBoundingClientRect(); const cx = r.left + r.width/2; const cy = r.top + r.height/2; const px = p.left + p.width/2; const py = p.top + p.height/2; const snap = 6; gH.style.display='none'; gV.style.display='none'; if(Math.abs(cy-py)<snap){ gH.style.display='block' } if(Math.abs(cx-px)<snap){ gV.style.display='block' } }
+  function hideGuides(){ gH.style.display='none'; gV.style.display='none'; }
 
-  // ---- 清除素材 ----
-  btnClear.addEventListener('click', ()=>{
-    if(!confirm('確定要清除畫面上的圖片與位置調整嗎？')) return;
-    slots.forEach((slot,i)=>{
-      const img = slot.querySelector('.img');
-      const scale = slot.querySelector('.scale');
-      const posx = slot.querySelector('.posx');
-      const posy = slot.querySelector('.posy');
-    const modeCover = slot.querySelector('.mode-cover');
-    const modeContain = slot.querySelector('.mode-contain');
-      img.removeAttribute('src');
-      scale.value = 100; posx.value = 0; posy.value = 0;
-      localStorage.removeItem(LS.SLOT(i));
-      img.style.transform = 'translate(-50%,-50%) scale(1)';
-    });
-  });
+  // 列印、PDF 觸發
+  document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
 
-  // ---- Guide ----
-  btnGuide.addEventListener('click', ()=> dlg.showModal());
-
-  // 初次開啟顯示教學一次
-  if(!localStorage.getItem('pop_a4_seen')){ dlg.showModal(); localStorage.setItem('pop_a4_seen','1'); }
   </script>
 </body>
 </html>
