@@ -76,7 +76,7 @@
   .slot-controls .mini label{margin-right:4px;}
 
   /* 分隔線：僅畫面顯示，列印隱藏 */
-  .divider{position:absolute; background:#c9ced6; z-index:2}
+  .divider{position:absolute; background:#c9ced6; z-index:2; pointer-events:none}
   .portrait .divider.h{left:0; right:0; height:1px; top:50%;}
   .landscape .divider.v{top:0; bottom:0; width:1px; left:50%;}
   @media print{
@@ -86,7 +86,7 @@
     .app{margin:0; padding:0}
     .paper{box-shadow:none; border:0}
     .slot-controls, .crosshair, .tooltip, .divider{display:none !important}
-  } }
+  }
 
   /* 線上教學浮層 */
   dialog{border:1px solid var(--line); border-radius:14px; padding:16px; width:min(520px,92vw);}
