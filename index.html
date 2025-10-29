@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>A4 拼圖 POP 產出器</title>
+<title>POP helper</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -14,29 +14,31 @@
     --accent:#2b7cff;         /* 強調用色（按鈕） */
     --ok:#1a7f37;
     --warn:#b54708;
+    --zoom:.82;               /* 顯示縮放，匯出時會暫時改為 1 */
   }
   html,body{height:100%;}
   body{
     margin:0; background:var(--ui-bg); color:var(--ui); font-family:"Noto Sans TC", system-ui, -apple-system, Segoe UI, Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
     line-height:1.5;
   }
-  .app{max-width:1200px; margin:24px auto; padding:16px;}
-  header{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px;}
-  h1{font-size:20px; margin:0; font-weight:700;}
+  .app{max-width:1080px; margin:20px auto; padding:12px;}
+  header{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  h1{font-size:18px; margin:0; font-weight:700;}
   .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
   .seg{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff}
-  .seg button{padding:8px 12px; border:0; background:transparent; color:var(--ui); cursor:pointer; font-weight:600}
+  .seg button{padding:7px 10px; border:0; background:transparent; color:var(--ui); cursor:pointer; font-weight:600}
   .seg button[aria-pressed="true"]{background:var(--accent); color:#fff}
-  .btn{appearance:none; border:1px solid var(--line); background:#fff; color:var(--ui); padding:8px 12px; border-radius:10px; font-weight:600; cursor:pointer}
+  .btn{appearance:none; border:1px solid var(--line); background:#fff; color:var(--ui); padding:7px 10px; border-radius:10px; font-weight:600; cursor:pointer}
   .btn.primary{background:var(--accent); color:#fff; border-color:transparent}
   .btn:disabled{opacity:.5; cursor:not-allowed}
-  .card{background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px;}
-  .toolbar{display:flex; gap:8px; align-items:center; justify-content:space-between; margin:10px 0 14px;}
-  .note{color:var(--muted); font-size:13px}
-  .paper-wrap{background:repeating-linear-gradient(45deg,#fafafa 0 12px,#f3f4f6 12px 24px); border:1px dashed var(--line); border-radius:12px; padding:12px}
+  .card{background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px;}
+  .toolbar{display:flex; gap:8px; align-items:center; justify-content:space-between; margin:8px 0 12px;}
+  .note{color:var(--muted); font-size:12px}
+  .paper-wrap{background:repeating-linear-gradient(45deg,#fafafa 0 12px,#f3f4f6 12px 24px); border:1px dashed var(--line); border-radius:12px; padding:10px}
+  .zoom-box{transform:scale(var(--zoom)); transform-origin: top left; width:fit-content}
   .paper{margin:0 auto; background:#fff; position:relative; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.06);}
-  /* A4 實際比例 210 x 297 mm，依方向調整像素大小；列印時用 @page 控制 */
-  .paper.portrait{width:794px; height:1123px;}   /* 96dpi 約 A4 尺寸 */
+  /* A4 比例 210 x 297 mm；列印以 @page 控制。顯示縮小不影響匯出。 */
+  .paper.portrait{width:794px; height:1123px;}
   .paper.landscape{width:1123px; height:794px;}
   .half{position:absolute; inset:0;}
   .portrait .half.top{height:50%; top:0;}
@@ -44,39 +46,50 @@
   .landscape .half.left{width:50%; left:0; height:100%;}
   .landscape .half.right{width:50%; left:50%; height:100%;}
 
-  /* 可拖曳縮放的圖層容器 */
+  /* 可拖曳縮放的圖層容器（不再整塊點擊上傳，避免誤觸） */
   .slot{position:absolute; inset:0; overflow:hidden; background:#f8fafc;}
   .slot.drag-over{outline:2px dashed var(--accent); outline-offset:-6px}
   .slot .img{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); transform-origin:center; pointer-events:none;}
-  .slot input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer}
+  .slot input[type=file]{position:absolute; inset:auto; width:1px; height:1px; opacity:0;}
 
-  /* 中心十字準心（互動提示） */
-  .crosshair{position:absolute; top:50%; left:50%; width:52px; height:52px; margin:-26px 0 0 -26px; display:grid; place-items:center; pointer-events:none}
+  /* 中心十字準心（作為明確上傳觸發器） */
+  .crosshair{position:absolute; top:50%; left:50%; width:60px; height:60px; margin:-30px 0 0 -30px; display:grid; place-items:center;}
+  .crosshair button{all:unset; display:grid; place-items:center; width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,.9); border:1px solid var(--line); cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.06)}
+  .crosshair button:hover{transform:scale(1.06)}
   .crosshair .plus{width:24px; height:24px; position:relative;}
   .crosshair .plus::before, .crosshair .plus::after{content:""; position:absolute; background:#111;}
   .crosshair .plus::before{width:2px; height:24px; left:50%; top:0; transform:translateX(-50%);} 
   .crosshair .plus::after{height:2px; width:24px; top:50%; left:0; transform:translateY(-50%);} 
-  .slot:hover .crosshair{animation:hint 1.2s ease-in-out infinite}
-  @keyframes hint{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
-  .tooltip{position:absolute; top:calc(50% + 36px); left:50%; transform:translateX(-50%); background:rgba(17,17,17,.82); color:#fff; padding:6px 10px; font-size:12px; border-radius:8px; pointer-events:none; opacity:0; transition:.2s}
+  .tooltip{position:absolute; top:calc(50% + 40px); left:50%; transform:translateX(-50%); background:rgba(17,17,17,.82); color:#fff; padding:5px 8px; font-size:11px; border-radius:8px; pointer-events:none; opacity:0; transition:.2s}
   .slot:hover .tooltip{opacity:1}
 
   /* 調整工具（每格） */
-  .slot-controls{position:absolute; left:10px; bottom:10px; display:flex; gap:8px; padding:6px; background:rgba(255,255,255,.85); border:1px solid var(--line); border-radius:10px; backdrop-filter: blur(4px);} 
-  .slot-controls input[type=range]{width:160px}
+  .slot-controls{position:absolute; left:8px; bottom:8px; display:flex; gap:8px; padding:6px; background:rgba(255,255,255,.85); border:1px solid var(--line); border-radius:10px; backdrop-filter: blur(4px);} 
+  .slot-controls input[type=range]{width:140px}
   .slot-controls .mini{display:inline-flex; align-items:center; gap:6px;}
   .slot-controls label{font-size:12px; color:#333}
+  .slot-controls .pick{font-size:12px; padding:4px 8px; border-radius:8px; border:1px solid var(--line); background:#fff; cursor:pointer}
 
-  /* 免分隔線，僅保留 0px；但保留可切換 hook（若未來要開） */
-  .divider{display:none}
+  /* 分隔線：僅畫面顯示，列印隱藏 */
+  .divider{position:absolute; background:#c9ced6; z-index:2}
+  .portrait .divider.h{left:0; right:0; height:1px; top:50%;}
+  .landscape .divider.v{top:0; bottom:0; width:1px; left:50%;}
+  @media print{
+    body{background:#fff}
+    header, .toolbar, .legal{display:none !important}
+    .paper-wrap{padding:0; border:0}
+    .app{margin:0; padding:0}
+    .paper{box-shadow:none; border:0}
+    .slot-controls, .crosshair, .tooltip, .divider{display:none !important}
+  } }
 
   /* 線上教學浮層 */
-  dialog{border:1px solid var(--line); border-radius:14px; padding:18px 16px; width:min(560px,92vw);}
+  dialog{border:1px solid var(--line); border-radius:14px; padding:16px; width:min(520px,92vw);}
   dialog::backdrop{background:rgba(0,0,0,.35)}
   .list{padding-left:18px}
 
   /* 法遵同意區 */
-  .legal{margin-top:14px; font-size:13px; color:#333;}
+  .legal{margin-top:12px; font-size:12px; color:#333;}
   .legal small{display:block; color:#666}
   .legal .warn{color:var(--warn); font-weight:700}
 
@@ -89,12 +102,13 @@
     .paper{box-shadow:none; border:0}
   }
   @page { size: A4; margin: 0; }
+.exporting .slot-controls, .exporting .crosshair, .exporting .tooltip, .exporting .divider{display:none !important}
 </style>
 </head>
 <body>
   <div class="app">
     <header>
-      <h1>A4 拼圖 POP 產出器</h1>
+      <h1>POP helper</h1>
       <div class="controls">
         <div class="seg" role="group" aria-label="方向切換">
           <button id="btnPortrait" aria-pressed="true">直式 A4</button>
@@ -106,43 +120,49 @@
 
     <div class="card">
       <div class="toolbar">
-        <div class="note">上傳兩張圖片，並在預覽中拖曳調整位置、用滑桿縮放。</div>
+        <div class="note">上傳兩張圖片（A4 各半 = A5）。可拖曳移動、滾輪/滑桿縮放。中間線僅供對位，<b>不會列印</b>。</div>
         <div style="display:flex; gap:8px; align-items:center;">
+          <button id="btnClear" class="btn">清除素材</button>
           <button id="btnPrint" class="btn" disabled>列印（A4）</button>
           <button id="btnPdf" class="btn primary" disabled>下載 PDF</button>
         </div>
       </div>
 
       <div class="paper-wrap">
-        <section id="paper" class="paper portrait" aria-label="A4 畫布">
-          <!-- 直式：上下兩半；橫式：左右兩半（以 class 控制） -->
-          <div class="half top">
-            <div class="slot" data-idx="0">
-              <div class="crosshair" aria-hidden="true"><div class="plus"></div></div>
-              <div class="tooltip">點我或拖曳圖片上來</div>
-              <img class="img" alt="圖一" />
-              <input class="file" type="file" accept="image/*" aria-label="上傳圖一">
-              <div class="slot-controls">
-                <div class="mini"><label>縮放</label><input class="scale" type="range" min="50" max="200" value="100"></div>
-                <div class="mini"><label>X</label><input class="posx" type="range" min="-400" max="400" value="0"></div>
-                <div class="mini"><label>Y</label><input class="posy" type="range" min="-400" max="400" value="0"></div>
+        <div id="zoomBox" class="zoom-box">
+          <section id="paper" class="paper portrait" aria-label="A4 畫布">
+            <div class="divider h"></div>
+            <!-- 直式：上下兩半；橫式：左右兩半（以 class 控制） -->
+            <div class="half top">
+              <div class="slot" data-idx="0">
+                <div class="crosshair"><button type="button" class="choose" aria-label="選擇圖片 1"><span class="plus"></span></button></div>
+                <div class="tooltip">拖曳圖片到此，或按＋選擇</div>
+                <img class="img" alt="圖一" />
+                <input class="file" type="file" accept="image/*" aria-label="上傳圖一">
+                <div class="slot-controls">
+                  <button class="pick" type="button">選擇圖片</button>
+                  <div class="mini"><label>縮放</label><input class="scale" type="range" min="50" max="220" value="100"></div>
+                  <div class="mini"><label>X</label><input class="posx" type="range" min="-500" max="500" value="0"></div>
+                  <div class="mini"><label>Y</label><input class="posy" type="range" min="-500" max="500" value="0"></div>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="half bottom">
-            <div class="slot" data-idx="1">
-              <div class="crosshair" aria-hidden="true"><div class="plus"></div></div>
-              <div class="tooltip">點我或拖曳圖片上來</div>
-              <img class="img" alt="圖二" />
-              <input class="file" type="file" accept="image/*" aria-label="上傳圖二">
-              <div class="slot-controls">
-                <div class="mini"><label>縮放</label><input class="scale" type="range" min="50" max="200" value="100"></div>
-                <div class="mini"><label>X</label><input class="posx" type="range" min="-400" max="400" value="0"></div>
-                <div class="mini"><label>Y</label><input class="posy" type="range" min="-400" max="400" value="0"></div>
+            <div class="half bottom">
+              <div class="slot" data-idx="1">
+                <div class="crosshair"><button type="button" class="choose" aria-label="選擇圖片 2"><span class="plus"></span></button></div>
+                <div class="tooltip">拖曳圖片到此，或按＋選擇</div>
+                <img class="img" alt="圖二" />
+                <input class="file" type="file" accept="image/*" aria-label="上傳圖二">
+                <div class="slot-controls">
+                  <button class="pick" type="button">選擇圖片</button>
+                  <div class="mini"><label>縮放</label><input class="scale" type="range" min="50" max="220" value="100"></div>
+                  <div class="mini"><label>X</label><input class="posx" type="range" min="-500" max="500" value="0"></div>
+                  <div class="mini"><label>Y</label><input class="posy" type="range" min="-500" max="500" value="0"></div>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
 
       <div class="legal">
@@ -153,31 +173,32 @@
       </div>
     </div>
 
-    <p class="note">小提醒：此頁會記住您上次的方向選擇與圖片調整（僅儲存在本機）。</p>
+    <p class="note">小提醒：此頁會記住您上次的方向與圖片調整（僅儲存在本機）。</p>
   </div>
 
   <dialog id="dlg">
     <h3 style="margin:.25rem 0 .5rem 0; font-weight:700">快速使用教學</h3>
     <ol class="list">
       <li>選擇「直式 A4」或「橫式 A4」。</li>
-      <li>點十字準心或把圖片拖進每個區塊，上傳兩張圖片。</li>
-      <li>在圖片上用滑桿調整縮放與位置；完成後勾選同意，即可列印或下載 PDF。</li>
+      <li>把圖片拖進每個區塊，或按中央 <b>＋</b>／「選擇圖片」。</li>
+      <li>用滑桿或滾輪調整縮放，直接拖曳圖片調整位置；勾選同意後，即可列印或下載 PDF。</li>
     </ol>
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px">
       <button class="btn" onclick="dlg.close()">我知道了</button>
     </div>
   </dialog>
 
-  <!-- 依賴：html2canvas + jsPDF（用於匯出 PDF）。皆為 CDN 單檔引用。 -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <script>
   const paper = document.getElementById('paper');
+  const zoomBox = document.getElementById('zoomBox');
   const btnPortrait = document.getElementById('btnPortrait');
   const btnLandscape = document.getElementById('btnLandscape');
   const btnPrint = document.getElementById('btnPrint');
   const btnPdf = document.getElementById('btnPdf');
+  const btnClear = document.getElementById('btnClear');
   const agree = document.getElementById('agree');
   const dlg = document.getElementById('dlg');
   const btnGuide = document.getElementById('btnGuide');
@@ -190,7 +211,6 @@
     SLOT: (i)=>`pop_a4_slot_${i}` // 內含 {scale, x, y, imgData}
   };
 
-  // ---- Helpers ----
   function setOrientation(mode){
     const isPortrait = mode === 'portrait';
     paper.classList.toggle('portrait', isPortrait);
@@ -198,13 +218,17 @@
     btnPortrait.setAttribute('aria-pressed', isPortrait);
     btnLandscape.setAttribute('aria-pressed', !isPortrait);
 
-    // 切換 half 的排列 class
+    // 分隔線切換方向
+    const hasH = paper.querySelector('.divider.h');
+    const hasV = paper.querySelector('.divider.v');
     if(isPortrait){
-      paper.querySelector('.half.top').style.display = '';
-      paper.querySelector('.half.bottom').style.display = '';
+      if(!hasH){ const d=document.createElement('div'); d.className='divider h'; paper.prepend(d); }
+      if(hasV) hasV.remove();
       paper.querySelector('.half.top').className = 'half top';
       paper.querySelector('.half.bottom').className = 'half bottom';
     }else{
+      if(!hasV){ const d=document.createElement('div'); d.className='divider v'; paper.prepend(d); }
+      const h = paper.querySelector('.divider.h'); if(h) h.remove();
       paper.querySelector('.half.top').className = 'half left';
       paper.querySelector('.half.bottom').className = 'half right';
     }
@@ -238,41 +262,46 @@
   slots.forEach((slot,i)=>{
     const img = slot.querySelector('.img');
     const file = slot.querySelector('.file');
+    const chooseBtn = slot.querySelector('.choose');
+    const pickBtn = slot.querySelector('.pick');
     const scale = slot.querySelector('.scale');
     const posx = slot.querySelector('.posx');
     const posy = slot.querySelector('.posy');
 
-    // 拖放上傳
+    // 拖放上傳（避免誤觸：不綁 slot click）
     slot.addEventListener('dragover', e=>{e.preventDefault(); slot.classList.add('drag-over')});
     slot.addEventListener('dragleave', ()=>slot.classList.remove('drag-over'));
     slot.addEventListener('drop', async e=>{
       e.preventDefault(); slot.classList.remove('drag-over');
       const f = e.dataTransfer.files?.[0];
       if(f && f.type.startsWith('image/')){ img.src = await dataURLFromFile(f); saveSlot(i,{imgData:img.src}); }
-      updateHasImage();
     });
-    // 點選上傳
-    slot.addEventListener('click', ()=> file.click());
+    // 明確觸發：中央＋ 或 控制列的「選擇圖片」
+    const openPicker = ()=> file.click();
+    chooseBtn.addEventListener('click', openPicker);
+    pickBtn.addEventListener('click', openPicker);
+
     file.addEventListener('change', async ()=>{
-      if(file.files[0]){ img.src = await dataURLFromFile(file.files[0]); saveSlot(i,{imgData:img.src}); updateHasImage(); }
+      if(file.files[0]){ img.src = await dataURLFromFile(file.files[0]); saveSlot(i,{imgData:img.src}); }
     });
 
     // 拖曳移動（按住滑鼠拖動）
     let dragging=false, startX=0, startY=0, ox=0, oy=0;
     slot.addEventListener('pointerdown', (e)=>{
-      // 只在已載入圖片時可拖曳
+      // 僅在已載入圖片且不是點在按鈕上時可拖曳
       if(!img.src) return;
+      if(e.target.closest('button')) return;
       dragging=true; startX=e.clientX; startY=e.clientY; ox=+posx.value; oy=+posy.value; slot.setPointerCapture(e.pointerId);
     });
     slot.addEventListener('pointermove', (e)=>{
       if(!dragging) return; const dx=e.clientX-startX, dy=e.clientY-startY; posx.value = ox+dx; posy.value = oy+dy; apply();
     });
-    slot.addEventListener('pointerup', (e)=>{ if(!dragging) return; dragging=false; saveSlot(i,{x:+posx.value, y:+posy.value}); });
+    slot.addEventListener('pointerup', ()=>{ if(!dragging) return; dragging=false; saveSlot(i,{x:+posx.value, y:+posy.value}); });
 
     // 滾輪縮放
     slot.addEventListener('wheel', (e)=>{
       if(!img.src) return; e.preventDefault();
-      const v = Math.min(200, Math.max(50, (+scale.value + (e.deltaY<0? 5:-5))));
+      const v = Math.min(220, Math.max(50, (+scale.value + (e.deltaY<0? 5:-5))));
       scale.value = v; apply(); saveSlot(i,{scale:+scale.value});
     }, {passive:false});
 
@@ -294,9 +323,13 @@
     apply();
   });
 
-  function updateHasImage(){
-    // 無論是否有圖，交給匯出時再檢查
+  function enableExportIfAgreed(){
+    const ok = agree.checked;
+    btnPrint.disabled = !ok;
+    btnPdf.disabled = !ok;
   }
+  agree.addEventListener('change', enableExportIfAgreed);
+  enableExportIfAgreed();
 
   // ---- Orientation init ----
   const cachedOrient = localStorage.getItem(LS.ORIENT) || 'portrait';
@@ -304,38 +337,57 @@
   btnPortrait.addEventListener('click', ()=> setOrientation('portrait'));
   btnLandscape.addEventListener('click', ()=> setOrientation('landscape'));
 
-  // ---- Agree toggle ----
-  agree.addEventListener('change', enableExportIfAgreed);
-  enableExportIfAgreed();
-
-  // ---- Guide ----
-  btnGuide.addEventListener('click', ()=> dlg.showModal());
-
   // ---- Print ----
   btnPrint.addEventListener('click', ()=>{
     window.print();
   });
 
-  // ---- Export PDF ----
+  // ---- Export PDF （匯出前臨時關閉顯示縮放，確保高畫質） ----
+  async function renderCanvas(){
+    const prevZoom = getComputedStyle(document.documentElement).getPropertyValue('--zoom');
+    document.documentElement.style.setProperty('--zoom','1');
+    document.body.classList.add('exporting');
+    await new Promise(r=> setTimeout(r, 50));
+    const canvas = await html2canvas(paper, {backgroundColor:'#ffffff', scale:2, useCORS:true});
+    document.body.classList.remove('exporting');
+    document.documentElement.style.setProperty('--zoom', prevZoom.trim()||'.82');
+    return canvas;
+  }
+
   btnPdf.addEventListener('click', async ()=>{
     const mode = paper.classList.contains('portrait') ? 'p' : 'l';
-    // 先用 html2canvas 渲染畫布，再塞到 jsPDF
-    // 提升畫質：scale 2
-    const canvas = await html2canvas(paper, {backgroundColor:'#ffffff', scale:2, useCORS:true});
+    const canvas = await renderCanvas();
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({orientation: mode==='p'?'portrait':'landscape', unit:'mm', format:'a4'});
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    // 等比鋪滿頁面
     const imgW = canvas.width; const imgH = canvas.height; 
     const ratio = Math.min(pageW/imgW, pageH/imgH);
     const w = imgW*ratio, h = imgH*ratio; const x=(pageW-w)/2, y=(pageH-h)/2;
     pdf.addImage(imgData, 'JPEG', x, y, w, h);
-    pdf.save('A4_拼圖_POP.pdf');
+    pdf.save('POP_helper_A4.pdf');
   });
 
-  // 初次開啟顯示教學一次（可在本機記憶）
+  // ---- 清除素材 ----
+  btnClear.addEventListener('click', ()=>{
+    if(!confirm('確定要清除畫面上的圖片與位置調整嗎？')) return;
+    slots.forEach((slot,i)=>{
+      const img = slot.querySelector('.img');
+      const scale = slot.querySelector('.scale');
+      const posx = slot.querySelector('.posx');
+      const posy = slot.querySelector('.posy');
+      img.removeAttribute('src');
+      scale.value = 100; posx.value = 0; posy.value = 0;
+      localStorage.removeItem(LS.SLOT(i));
+      img.style.transform = 'translate(-50%,-50%) scale(1)';
+    });
+  });
+
+  // ---- Guide ----
+  btnGuide.addEventListener('click', ()=> dlg.showModal());
+
+  // 初次開啟顯示教學一次
   if(!localStorage.getItem('pop_a4_seen')){ dlg.showModal(); localStorage.setItem('pop_a4_seen','1'); }
   </script>
 </body>
